@@ -1,12 +1,12 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "App.h"
+#include "Menu.h"
 
 int main()
 {
-	App app;
-	app.Run();
+	Menu menu;
+	menu.Run();
 
 	return EXIT_SUCCESS;
 }

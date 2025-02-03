@@ -27,10 +27,12 @@
     <ClCompile Include="src\Client.cpp">
       <Filter>Private\Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\Menu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App.h">
       <Filter>Public\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Menu.h" />
   </ItemGroup>
 </Project>

@@ -11,10 +11,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\App.cpp" />
     <ClCompile Include="src\Client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\App.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
