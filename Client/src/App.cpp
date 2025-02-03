@@ -1,6 +1,9 @@
-#include "App.h"
+#define _CRT_SECURE_NO_WARNINGS
+#define RAYGUI_IMPLEMENTATION
 
+#include "App.h"
 #include <raylib.h>
+#include <raygui.h>
 
 // This warning was triggered because Raylib is included statically
 // Shouldn't cause any issues
