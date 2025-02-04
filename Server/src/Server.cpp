@@ -33,18 +33,18 @@ int clientAddrSize = sizeof(clientAddr);
 char buffer[BUFFER_SIZE];
 
 
-void InitializeServer() {
+bool InitializeServer() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::cerr << "Erreur WSAStartup\n";
-        exit(EXIT_FAILURE);
+        return false;
     }
 
     serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
     if (serverSocket == INVALID_SOCKET) {
         std::cerr << "Erreur de création du socket\n";
         WSACleanup();
-        exit(EXIT_FAILURE);
+        return false;
     }
 
     serverAddr.sin_family = AF_INET;
@@ -55,10 +55,11 @@ void InitializeServer() {
         std::cerr << "Erreur lors du bind du socket\n";
         closesocket(serverSocket);
         WSACleanup();
-        exit(EXIT_FAILURE);
+        return false;
     }
 
     std::cout << "Serveur Pong démarré sur le port " << PORT << "...\n";
+    return true;
 }
 
 
@@ -156,8 +157,11 @@ void SendGameState(int matchID) {
 
 
 int main() {
-    InitializeServer();
 
+    if (!InitializeServer()) {
+        std::cerr << "Échec de l'initialisation du serveur. Fermeture du programme.\n";
+        return EXIT_FAILURE;
+    }
     while (true) {
         PlayerInput input;
         if (ReceivePlayerInput(input)) {
