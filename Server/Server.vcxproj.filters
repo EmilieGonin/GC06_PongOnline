@@ -13,7 +13,6 @@
       <Filter>Private</Filter>
     </ClCompile>
     <ClCompile Include="src\JsonParser.cpp" />
-    <ClCompile Include="src\GameData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\JsonParser.h" />
