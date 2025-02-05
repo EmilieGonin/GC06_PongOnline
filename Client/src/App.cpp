@@ -1,40 +1,32 @@
-#define _CRT_SECURE_NO_WARNINGS
-#define RAYGUI_IMPLEMENTATION
-
 #include "App.h"
-#include <raylib.h>
-#include <raygui.h>
 
-// This warning was triggered because Raylib is included statically
-// Shouldn't cause any issues
-#pragma warning(disable: 4098)
+void App::Run() {
+    window.createWindow(800, 600, "Pong Online");
 
-void App::Run()
-{
-	InitWindow(800, 600, "Pong Online");
+    while (window.isOpen()) {
+        HandleEvents();
+        Render();
+    }
 
-	while (!WindowShouldClose())
-	{
-		Render();
-	}
-
-	CloseWindow();
+    window.close();
 }
 
-void App::HandleEvents()
-{
-	// TODO: Handle player input events here
+void App::HandleEvents() {
+    // TODO: Handle player input events here
 }
 
-void App::Render()
-{
-	BeginDrawing();
-	ClearBackground(WHITE);
+void App::Render() {
+    window.clear();
+    sceneManager.Update();
+    sceneManager.Draw();
+    window.display();
+}
 
-	DrawText("Hello, Raylib!", 350, 280, 20, DARKGRAY); //temp
+// main.cpp
+#include "App.h"
 
-	// TODO: Draw game objects here
-	// Draw associated shape/sprite to each entity
-
-	EndDrawing();
+int main() {
+    App app;
+    app.Run();
+    return 0;
 }

@@ -2,14 +2,17 @@
 
 #include <vector>
 
-class App
-{
-public:
-	void Run();
+class Window;
+class SceneManager;
 
+class App {
 private:
-	void HandleEvents();
-	void Update(float deltaTime);
-	void Render();
+    Window window;
+    SceneManager sceneManager;
+
+public:
+    void Run();
+    void HandleEvents();
+    void Render();
 };
 
