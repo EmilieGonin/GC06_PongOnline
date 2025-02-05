@@ -63,11 +63,10 @@ int main() {
             if (GetAsyncKeyState('D') & 0x8000) input.moveDown = true;
         }
 
-        // Envoyer les inputs au serveur
         sendto(clientSocket, (char*)&input, sizeof(PlayerInput), 0,
             (sockaddr*)&serverAddr, sizeof(serverAddr));
 
-        // Réception de l'état du jeu
+        
         SimpleGameState gameState;
         int serverAddrSize = sizeof(serverAddr);
         int bytesReceived = recvfrom(clientSocket, (char*)&gameState, sizeof(SimpleGameState), 0,
@@ -85,7 +84,7 @@ int main() {
                 << " | Score: " << gameState.score1 << " - " << gameState.score2
                 << std::endl;
         }
-        Sleep(10);
+      
     }
 
     closesocket(clientSocket);
