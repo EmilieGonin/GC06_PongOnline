@@ -176,7 +176,7 @@ void SendTestMessage(int matchID) {
 void GameLoop() {
     using namespace std::chrono;
     const int TIMEOUT_SECONDS = 5;
-    const milliseconds FRAME_TIME(1000 / 60); 
+    const milliseconds FRAME_TIME(1000 / 60);  // 60 FPS
 
     while (running) {
         auto now = steady_clock::now();
@@ -185,22 +185,22 @@ void GameLoop() {
             int matchID = it->first;
             auto& gameState = it->second;
 
-        
+            // Vérifier si le match est prêt à jouer (deux joueurs actifs)
             if (!IsMatchReady(matchID)) {
                 ++it;
                 continue;
             }
 
-            
+            // Vérifier si un joueur est inactif
             bool player1Active = now - lastActivity[matchID].first < seconds(TIMEOUT_SECONDS);
             bool player2Active = now - lastActivity[matchID].second < seconds(TIMEOUT_SECONDS);
 
             if (!player1Active || !player2Active) {
                 std::cout << "[SERVEUR] Match " << matchID << " terminé - Un joueur s'est déconnecté.\n";
 
-                
+                // Informer le joueur restant
                 SimpleGameState disconnectMessage = {};
-                disconnectMessage.frameID = -1;  
+                disconnectMessage.frameID = -1;  // Indiquer la fin du match
                 if (player1Active) {
                     sendto(serverSocket, (char*)&disconnectMessage, sizeof(SimpleGameState), 0,
                         (sockaddr*)&playerPairs[matchID].first, clientAddrSize);
@@ -210,16 +210,55 @@ void GameLoop() {
                         (sockaddr*)&playerPairs[matchID].second, clientAddrSize);
                 }
 
-                
+                // Supprimer la partie
                 playerPairs.erase(matchID);
                 lastActivity.erase(matchID);
                 it = games.erase(it);
                 continue;
             }
 
-           
+            // ✅ Mise à jour de la position de la balle
             gameState.ballX += gameState.ballVelX;
             gameState.ballY += gameState.ballVelY;
+
+            // ✅ Rebond contre les murs haut et bas
+            if (gameState.ballY <= 0 || gameState.ballY >= SCREEN_HEIGHT) {
+                gameState.ballVelY = -gameState.ballVelY;
+            }
+
+            // ✅ Collision avec le paddle gauche (Joueur 1)
+            if (gameState.ballX <= 50 &&
+                gameState.ballY >= gameState.player1Y &&
+                gameState.ballY <= gameState.player1Y + 100) {
+                gameState.ballVelX = -gameState.ballVelX;
+            }
+
+            // ✅ Collision avec le paddle droit (Joueur 2)
+            if (gameState.ballX >= SCREEN_WIDTH - 50 &&
+                gameState.ballY >= gameState.player2Y &&
+                gameState.ballY <= gameState.player2Y + 100) {
+                gameState.ballVelX = -gameState.ballVelX;
+            }
+
+            // ✅ Si la balle sort à gauche, point pour le joueur 2
+            if (gameState.ballX < 0) {
+                gameState.score2++;
+                gameState.ballX = SCREEN_WIDTH / 2;
+                gameState.ballY = SCREEN_HEIGHT / 2;
+                gameState.ballVelX = BALL_SPEED;
+                gameState.ballVelY = BALL_SPEED;
+            }
+
+            // ✅ Si la balle sort à droite, point pour le joueur 1
+            if (gameState.ballX > SCREEN_WIDTH) {
+                gameState.score1++;
+                gameState.ballX = SCREEN_WIDTH / 2;
+                gameState.ballY = SCREEN_HEIGHT / 2;
+                gameState.ballVelX = -BALL_SPEED;
+                gameState.ballVelY = BALL_SPEED;
+            }
+
+            // ✅ Envoyer l'état du jeu aux clients
             SendTestMessage(matchID);
 
             ++it;
