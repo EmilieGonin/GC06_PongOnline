@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Sprite.h"
+#include <raylib.h>
 
 class Paddle {
 public:
@@ -10,10 +10,11 @@ public:
 
     float GetX() const;
     float GetY() const;
-    float GetWidth() const;
-    float GetHeight() const;
+    Vector2 GetSize() const;
 
 private:
-    Sprite sprite;
-    float speed = 300.0f;
+    Vector2 position;
+    float width;
+    float height;
+    float speed;
 };

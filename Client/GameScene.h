@@ -1,13 +1,21 @@
 #pragma once
 
-#include "Scene.h"
-#include "raylib.h"
+#include "Paddle.h"
+#include "Ball.h"
+#include "InputManager.h"
+#include <raylib.h>
 
-class GameScene : public Scene {
+class GameScene {
 public:
-    void Init() override;
-    void Update() override;
-    void Draw() override;
-    void Unload() override;
-};
+    GameScene();
+    ~GameScene();
 
+    void Init();
+    void Update(InputManager& inputManager);
+    void Draw() const;
+
+private:
+    Paddle* player1;
+    Paddle* player2;
+    Ball* ball;
+};

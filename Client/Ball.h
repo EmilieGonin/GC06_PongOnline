@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Sprite.h"
+#include <raylib.h>
 
 class Ball {
 public:
@@ -11,8 +11,12 @@ public:
     void InvertDirectionX();
     void InvertDirectionY();
 
+    float GetX() const;
+    float GetY() const;
+    Vector2 GetSize() const;
+
 private:
-    Sprite sprite;
-    float dirX = 200.0f;
-    float dirY = 200.0f;
+    Vector2 position;
+    Vector2 velocity;
+    float radius;
 };
