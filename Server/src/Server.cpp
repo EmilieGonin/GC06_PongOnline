@@ -6,17 +6,41 @@
 #include <atomic>
 #pragma comment(lib, "ws2_32.lib")
 
-#include "GameData.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 8000
 #define SCREEN_HEIGHT 600
 #define SCREEN_WIDTH 800
 #define PADDLE_SPEED 5.0f
+#define BALL_SPEED 4.0f
+struct GameState {
+    float ballX, ballY;
+    float ballVelX, ballVelY;
+    float player1Y, player2Y;
+    int score1, score2;
+};
+
+struct PlayerInput {
+    int matchID;
+    int playerID;
+    bool moveUp;
+    bool moveDown;
+};
+
+struct SimpleGameState {
+    int frameID;
+    float player1Y;
+    float player2Y;
+    int score1;
+    int score2;
+    float ballx;
+    float bally;
+};
 
 std::map<int, std::pair<sockaddr_in, sockaddr_in>> playerPairs;
 std::map<int, GameState> games;
 std::map<int, int> frameCounters;
+std::map<int, std::pair<std::chrono::steady_clock::time_point, std::chrono::steady_clock::time_point>> lastActivity;
 std::atomic<bool> running(true);
 SOCKET serverSocket;
 sockaddr_in serverAddr, clientAddr;
@@ -58,36 +82,35 @@ bool InitializeServer() {
 }
 
 bool ReceivePlayerInput(PlayerInput& input) {
-    memset(buffer, 0, BUFFER_SIZE);
-    int bytesReceived = recvfrom(serverSocket, buffer, BUFFER_SIZE, 0,
-        (sockaddr*)&clientAddr, &clientAddrSize);
-
-    if (bytesReceived == SOCKET_ERROR) {
-        std::cerr << "Erreur reception message. Code : " << WSAGetLastError() << "\n";
-        return false;
-    }
+    char buffer[BUFFER_SIZE] = {};
+    int bytesReceived = recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (sockaddr*)&clientAddr, &clientAddrSize);
+    if (bytesReceived == SOCKET_ERROR) return false;
 
     memcpy(&input, buffer, sizeof(PlayerInput));
 
-   
-    if (playerPairs.find(input.matchID) == playerPairs.end()) {
+    // Vérifier si on enregistre un nouveau joueur
+    if (playerPairs[input.matchID].first.sin_port == 0) {
         playerPairs[input.matchID].first = clientAddr;
-        
+        lastActivity[input.matchID].first = std::chrono::steady_clock::now();
+    }
+    else if (playerPairs[input.matchID].second.sin_port == 0) {
+        playerPairs[input.matchID].second = clientAddr;
+        lastActivity[input.matchID].second = std::chrono::steady_clock::now();
     }
     else {
-        
-        if (playerPairs[input.matchID].first.sin_port == clientAddr.sin_port &&
-            playerPairs[input.matchID].first.sin_addr.s_addr == clientAddr.sin_addr.s_addr) {
-            std::cout << "[SERVEUR] Joueur 1 déjà enregistré avec cette IP.\n";
+        // Mise à jour de l'activité des joueurs
+        if (clientAddr.sin_port == playerPairs[input.matchID].first.sin_port) {
+            lastActivity[input.matchID].first = std::chrono::steady_clock::now();
         }
-        else {
-            playerPairs[input.matchID].second = clientAddr;
-          
+        else if (clientAddr.sin_port == playerPairs[input.matchID].second.sin_port) {
+            lastActivity[input.matchID].second = std::chrono::steady_clock::now();
         }
     }
 
     return true;
 }
+
+
 
 
 void UpdateGameState(const PlayerInput& input) {
@@ -97,7 +120,7 @@ void UpdateGameState(const PlayerInput& input) {
 
     GameState& gameState = games[input.matchID];
 
-    
+
     if (input.playerID == 1) {
         if (input.moveUp && gameState.player1Y > 0) gameState.player1Y -= PADDLE_SPEED;
         if (input.moveDown && gameState.player1Y < SCREEN_HEIGHT - 100) gameState.player1Y += PADDLE_SPEED;
@@ -108,9 +131,15 @@ void UpdateGameState(const PlayerInput& input) {
     }
 }
 
-
+bool IsMatchReady(int matchID) {
+    return playerPairs[matchID].first.sin_port != 0 &&
+        playerPairs[matchID].second.sin_port != 0 &&
+        lastActivity[matchID].first.time_since_epoch().count() != 0 &&
+        lastActivity[matchID].second.time_since_epoch().count() != 0;
+}
 void SendTestMessage(int matchID) {
-    if (playerPairs.find(matchID) == playerPairs.end()) {
+    if (!IsMatchReady(matchID)) {
+        std::cout << "[SERVEUR] En attente d'un deuxième joueur pour le match " << matchID << "...\n";
         return;
     }
 
@@ -124,15 +153,12 @@ void SendTestMessage(int matchID) {
     simpleState.ballx = gameState.ballX;
     simpleState.bally = gameState.ballY;
 
-
     if (playerPairs[matchID].first.sin_port != 0) {
-        std::cout << "[SERVEUR] Envoi au Joueur 1 (Port: " << ntohs(playerPairs[matchID].first.sin_port) << ")\n";
         sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0,
             (sockaddr*)&playerPairs[matchID].first, clientAddrSize);
     }
 
     if (playerPairs[matchID].second.sin_port != 0) {
-        std::cout << "[SERVEUR] Envoi au Joueur 2 (Port: " << ntohs(playerPairs[matchID].second.sin_port) << ")\n";
         sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0,
             (sockaddr*)&playerPairs[matchID].second, clientAddrSize);
     }
@@ -146,49 +172,64 @@ void SendTestMessage(int matchID) {
 }
 
 
+
 void GameLoop() {
     using namespace std::chrono;
-    const int TICK_RATE = 60; 
-    const milliseconds FRAME_TIME(1000 / TICK_RATE);
+    const int TIMEOUT_SECONDS = 5;
+    const milliseconds FRAME_TIME(1000 / 60); 
 
-    while (true) {
-        auto start = steady_clock::now();
+    while (running) {
+        auto now = steady_clock::now();
+
+        for (auto it = games.begin(); it != games.end();) {
+            int matchID = it->first;
+            auto& gameState = it->second;
 
         
-        for (auto& [matchID, gameState] : games) {
-            gameState.ballX += gameState.ballVelX;
-            gameState.ballY += gameState.ballVelY;
+            if (!IsMatchReady(matchID)) {
+                ++it;
+                continue;
+            }
+
+            
+            bool player1Active = now - lastActivity[matchID].first < seconds(TIMEOUT_SECONDS);
+            bool player2Active = now - lastActivity[matchID].second < seconds(TIMEOUT_SECONDS);
+
+            if (!player1Active || !player2Active) {
+                std::cout << "[SERVEUR] Match " << matchID << " terminé - Un joueur s'est déconnecté.\n";
+
+                
+                SimpleGameState disconnectMessage = {};
+                disconnectMessage.frameID = -1;  
+                if (player1Active) {
+                    sendto(serverSocket, (char*)&disconnectMessage, sizeof(SimpleGameState), 0,
+                        (sockaddr*)&playerPairs[matchID].first, clientAddrSize);
+                }
+                if (player2Active) {
+                    sendto(serverSocket, (char*)&disconnectMessage, sizeof(SimpleGameState), 0,
+                        (sockaddr*)&playerPairs[matchID].second, clientAddrSize);
+                }
+
+                
+                playerPairs.erase(matchID);
+                lastActivity.erase(matchID);
+                it = games.erase(it);
+                continue;
+            }
 
            
-            if (gameState.ballY <= 0 || gameState.ballY >= SCREEN_HEIGHT) {
-                gameState.ballVelY = -gameState.ballVelY;
-            }
-
-            //  collisions avec les paddles
-            if ((gameState.ballX <= 50 && gameState.ballY >= gameState.player1Y && gameState.ballY <= gameState.player1Y + 100) ||
-                (gameState.ballX >= 750 && gameState.ballY >= gameState.player2Y && gameState.ballY <= gameState.player2Y + 100)) {
-                gameState.ballVelX = -gameState.ballVelX;
-            }
-
-            
-            if (gameState.ballX < 0) {
-                gameState.score2++;
-                gameState.ballX = 400; gameState.ballY = 300;
-            }
-            else if (gameState.ballX > SCREEN_WIDTH) {
-                gameState.score1++;
-                gameState.ballX = 400; gameState.ballY = 300;
-            }
-
-            
+            gameState.ballX += gameState.ballVelX;
+            gameState.ballY += gameState.ballVelY;
             SendTestMessage(matchID);
+
+            ++it;
         }
 
-        // Attendre la fin du tick
-        auto end = steady_clock::now();
-        std::this_thread::sleep_for(FRAME_TIME - duration_cast<milliseconds>(end - start));
+        std::this_thread::sleep_for(FRAME_TIME);
     }
 }
+
+
 
 
 
@@ -203,7 +244,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    std::thread gameThread(GameLoop); 
+    std::thread gameThread(GameLoop);
 
     while (running) {
         PlayerInput input;
@@ -212,7 +253,7 @@ int main() {
         }
     }
 
-   
+
     if (gameThread.joinable()) {
         gameThread.join();
     }

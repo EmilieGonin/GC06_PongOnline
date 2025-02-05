@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <winsock2.h>
 #include <Ws2tcpip.h>
+#include <thread>  
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -63,20 +64,25 @@ int main() {
             if (GetAsyncKeyState('D') & 0x8000) input.moveDown = true;
         }
 
-        sendto(clientSocket, (char*)&input, sizeof(PlayerInput), 0,
-            (sockaddr*)&serverAddr, sizeof(serverAddr));
+        // Envoi des inputs au serveur
+        sendto(clientSocket, (char*)&input, sizeof(PlayerInput), 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
 
-        
+        // Réception des données du serveur
         SimpleGameState gameState;
         int serverAddrSize = sizeof(serverAddr);
-        int bytesReceived = recvfrom(clientSocket, (char*)&gameState, sizeof(SimpleGameState), 0,
-            (sockaddr*)&serverAddr, &serverAddrSize);
+        int bytesReceived = recvfrom(clientSocket, (char*)&gameState, sizeof(SimpleGameState), 0, (sockaddr*)&serverAddr, &serverAddrSize);
 
         if (bytesReceived == SOCKET_ERROR) {
             std::cerr << "[CLIENT] Erreur de réception: " << WSAGetLastError() << std::endl;
         }
-        else if (bytesReceived == sizeof(SimpleGameState) && gameState.frameID > lastFrameID) {
-            lastFrameID = gameState.frameID;
+        else if (bytesReceived == sizeof(SimpleGameState)) {
+            // ✅ Vérifier si l'adversaire s'est déconnecté
+            if (gameState.frameID == -1) {
+                std::cout << "[CLIENT] L'adversaire s'est déconnecté. Fin du match.\n";
+                break; // Quitter la boucle et terminer le client proprement
+            }
+
+            // Affichage des données du jeu
             std::cout << "[CLIENT] Frame " << gameState.frameID
                 << " | Ball (X: " << gameState.ballx << ", Y: " << gameState.bally << ")"
                 << " | Joueur 1 Y: " << gameState.player1Y
@@ -84,8 +90,9 @@ int main() {
                 << " | Score: " << gameState.score1 << " - " << gameState.score2
                 << std::endl;
         }
-      
     }
+
+
 
     closesocket(clientSocket);
     WSACleanup();
