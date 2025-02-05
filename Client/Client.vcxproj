@@ -11,23 +11,31 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GameScene.cpp" />
-    <ClCompile Include="MenuScene.cpp" />
-    <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="src\Ball.cpp" />
+    <ClCompile Include="src\GameScene.cpp" />
+    <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\App.cpp" />
     <ClCompile Include="src\Client.cpp" />
-    <ClCompile Include="Window.cpp" />
+    <ClCompile Include="src\MenuScene.cpp" />
+    <ClCompile Include="src\Paddle.cpp" />
+    <ClCompile Include="src\Scene.cpp" />
+    <ClCompile Include="src\SceneManager.cpp" />
+    <ClCompile Include="src\Sprite.cpp" />
+    <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GameScene.h" />
-    <ClInclude Include="MenuScene.h" />
-    <ClInclude Include="Scene.h" />
-    <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="src\Ball.h" />
+    <ClInclude Include="src\GameScene.h" />
+    <ClInclude Include="src\InputManager.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\App.h" />
-    <ClInclude Include="Window.h" />
+    <ClInclude Include="src\MenuScene.h" />
+    <ClInclude Include="src\Paddle.h" />
+    <ClInclude Include="src\Scene.h" />
+    <ClInclude Include="src\SceneManager.h" />
+    <ClInclude Include="src\Sprite.h" />
+    <ClInclude Include="src\Window.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

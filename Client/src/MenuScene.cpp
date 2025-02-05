@@ -1,10 +1,8 @@
 #include "MenuScene.h"
-
-#include "SceneManager.h"
 #include "GameScene.h"
+#include "SceneManager.h"
 #include <cstring>
 
-extern SceneManager* sceneManager;
 
 MenuScene::MenuScene() {
     strcpy_s(username, sizeof(username), "Joueur");
@@ -21,13 +19,23 @@ void MenuScene::Init() {
 
 void MenuScene::Update() {
     if (GuiButton(Rectangle{ 100, 350, 200, 60 }, "Creer une partie")) {
-        sceneManager->ChangeScene(GAME);
+        SceneManager::GetInstance().ChangeScene(GAME);
     }
 
-    if (GuiButton(Rectangle{ 350, 350, 200, 60 }, "Rejoindre une partie")) {
-        sceneManager->ChangeScene(GAME);
+    if (GuiButton(Rectangle{ 100, 420, 200, 60 }, "Rejoindre une partie")) {
+        SceneManager::GetInstance().ChangeScene(GAME);
+    }
+
+    // Gestion des champs de texte
+    if (GuiTextBox(Rectangle{ 100, 150, 200, 30 }, username, 20, editUser)) {
+        editUser = !editUser;
+    }
+
+    if (GuiTextBox(Rectangle{ 100, 200, 200, 30 }, serverIP, 20, editIP)) {
+        editIP = !editIP;
     }
 }
+
 
 void MenuScene::Draw() {
     BeginDrawing();
