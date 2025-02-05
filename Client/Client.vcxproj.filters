@@ -69,11 +69,11 @@
     <ClInclude Include="GameScene.h">
       <Filter>Private\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Window.h">
-      <Filter>Private\Entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\App.h">
       <Filter>Private\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Private\Entity</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

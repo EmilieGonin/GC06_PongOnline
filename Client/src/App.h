@@ -1,9 +1,8 @@
 #pragma once
-
+  
 #include <vector>
-
-class Window;
-class SceneManager;
+#include "../SceneManager.h"
+#include "../Window.h"
 
 class App {
 private:
