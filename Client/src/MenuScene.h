@@ -19,5 +19,6 @@ public:
     void Update() override;
     void Draw() override;
     void Unload() override;
+    void HandleInput();
 };
 
