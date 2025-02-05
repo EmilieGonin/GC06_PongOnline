@@ -1,17 +1,14 @@
 #pragma once
-  
+
 #include <vector>
-#include "../SceneManager.h"
-#include "../Window.h"
 
-class App {
-private:
-    Window window;
-    SceneManager sceneManager;
-
+class App
+{
 public:
-    void Run();
-    void HandleEvents();
-    void Render();
-};
+	void Run();
 
+private:
+	void HandleEvents();
+	void Update(float deltaTime);
+	void Render();
+};
