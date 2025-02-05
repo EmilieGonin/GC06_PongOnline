@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Sprite.h"
 #include <raylib.h>
 
 class Ball {
@@ -19,4 +20,6 @@ private:
     Vector2 position;
     Vector2 velocity;
     float radius;
+
+    Sprite* spriteBall;
 };
