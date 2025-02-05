@@ -6,36 +6,13 @@
 #include <atomic>
 #pragma comment(lib, "ws2_32.lib")
 
+#include "GameData.h"
+
 #define PORT 8080
 #define BUFFER_SIZE 8000
 #define SCREEN_HEIGHT 600
 #define SCREEN_WIDTH 800
 #define PADDLE_SPEED 5.0f
-#define BALL_SPEED 4.0f
-
-struct GameState {
-    float ballX, ballY;
-    float ballVelX, ballVelY;
-    float player1Y, player2Y;
-    int score1, score2;
-};
-
-struct PlayerInput {
-    int matchID;
-    int playerID;
-    bool moveUp;
-    bool moveDown;
-};
-
-struct SimpleGameState {
-    int frameID;
-    float player1Y;
-    float player2Y;
-    int score1;
-    int score2;
-    float ballx;
-    float bally;
-};
 
 std::map<int, std::pair<sockaddr_in, sockaddr_in>> playerPairs;
 std::map<int, GameState> games;
