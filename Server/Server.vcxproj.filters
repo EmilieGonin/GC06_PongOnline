@@ -12,5 +12,11 @@
     <ClCompile Include="src\Server.cpp">
       <Filter>Private</Filter>
     </ClCompile>
+    <ClCompile Include="src\JsonParser.cpp" />
+    <ClCompile Include="src\GameData.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\JsonParser.h" />
+    <ClInclude Include="src\GameData.h" />
   </ItemGroup>
 </Project>
