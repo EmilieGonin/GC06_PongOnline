@@ -5,7 +5,8 @@
 #include <string>
 
 
-MenuScene::MenuScene() {
+MenuScene::MenuScene() 
+{
     strcpy_s(username, sizeof(username), "Joueur");
     strcpy_s(serverIP, sizeof(serverIP), "127.0.0.1");
     editUser = false;
@@ -14,11 +15,13 @@ MenuScene::MenuScene() {
 
 MenuScene::~MenuScene() {}
 
-void MenuScene::Init() {
+void MenuScene::Init() 
+{
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
 }
 
-void MenuScene::Update() {
+void MenuScene::Update() 
+{
     HandleInput();  // Gérer les entrées utilisateur
 
     // Gestion des boutons
@@ -43,7 +46,8 @@ void MenuScene::Update() {
 }
 
 
-void MenuScene::Draw() {
+void MenuScene::Draw() 
+{
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
@@ -67,7 +71,8 @@ void MenuScene::Draw() {
 
 void MenuScene::Unload() {}
 
-void MenuScene::HandleInput() {
+void MenuScene::HandleInput() 
+{
     if (editUser) {
         int key = GetCharPressed();
         int len = strlen(username);
