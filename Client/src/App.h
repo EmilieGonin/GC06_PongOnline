@@ -12,4 +12,3 @@ private:
 	void Update(float deltaTime);
 	void Render();
 };
-
