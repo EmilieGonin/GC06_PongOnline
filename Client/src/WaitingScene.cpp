@@ -1,6 +1,6 @@
 #include "WaitingScene.h"
 
-WaitingScene::WaitingScene() {}
+WaitingScene::WaitingScene(const std::string& message) : waitingMessage(message) {}
 
 WaitingScene::~WaitingScene() {}
 
@@ -11,7 +11,7 @@ void WaitingScene::Update() {
 
     // Vérifier si 2 joueurs sont prêts
     if (NetworkManager::GetInstance().IsGameReady()) {
-        sceneManager.ChangeScene(GAME);
+        sceneManager.ChangeScene(GAME, "");
     }
 }
 
@@ -19,7 +19,7 @@ void WaitingScene::Draw() {
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    DrawText("En attente d'un autre joueur...", 100, 300, 30, DARKGRAY);
+    DrawText(waitingMessage.c_str(), 100, 300, 30, DARKGRAY);
 
     EndDrawing();
 }

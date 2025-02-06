@@ -34,7 +34,7 @@ void MenuScene::Update() {
         sceneManager.SetPlayerID(1);
 
         NetworkManager::GetInstance().ConnectToServer(serverIP, 1, username);
-        sceneManager.ChangeScene(WAITING);
+        sceneManager.ChangeScene(WAITING, "En attente d'un autre joueur...");
         
     }
 
@@ -43,9 +43,8 @@ void MenuScene::Update() {
         sceneManager.SetServerIP(serverIP);
         sceneManager.SetPlayerID(2);
 
-        if (NetworkManager::GetInstance().ConnectToServer(serverIP, 2, username)) {
-            sceneManager.ChangeScene(GAME);
-        }
+        NetworkManager::GetInstance().ConnectToServer(serverIP, 2, username);
+        sceneManager.ChangeScene(WAITING, "Connexion en cours...");
     }
 
     if (GuiTextBox(Rectangle{ 300, 115, 200, 30 }, username, 20, editUser)) {

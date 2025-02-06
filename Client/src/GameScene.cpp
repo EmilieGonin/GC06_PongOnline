@@ -34,7 +34,7 @@ void GameScene::Update() {
     ball->Update();
 
     if (inputManager.ShouldQuit()) {
-        SceneManager::GetInstance().ChangeScene(MENU);
+        SceneManager::GetInstance().ChangeScene(MENU, "");
     }
 }
 

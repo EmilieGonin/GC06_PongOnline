@@ -9,7 +9,8 @@ class SceneManager {
 public:
     static SceneManager& GetInstance();
 
-    void ChangeScene(SceneType type);
+    void ChangeScene(SceneType type, const std::string& message);
+
     void Update();
     void Draw();
 

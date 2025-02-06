@@ -18,7 +18,7 @@ SceneManager& SceneManager::GetInstance() {
     return instance;
 }
 
-void SceneManager::ChangeScene(SceneType type) {
+void SceneManager::ChangeScene(SceneType type, const std::string& message = "") {
     if (currentScene) {
         currentScene->Unload();
         delete currentScene;
@@ -30,7 +30,7 @@ void SceneManager::ChangeScene(SceneType type) {
         currentScene = new MenuScene();
         break;
     case WAITING:
-        currentScene = new WaitingScene();
+        currentScene = new WaitingScene(message);
         break;
     case GAME:
         currentScene = new GameScene();
