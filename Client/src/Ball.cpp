@@ -2,6 +2,9 @@
 #include <iostream>
 
 Ball::Ball(float startX, float startY) {
+    position.x = startX;
+    position.y = startY;
+
     spriteBall = new Sprite();
     if (!spriteBall->LoadImage("ball.png")) {  // Charge l'image de la balle
         std::cerr << "Erreur de chargement de ball.png" << std::endl;
@@ -18,6 +21,8 @@ void Ball::Update() {
     if (position.y <= 0 || position.y + radius * 2 >= GetScreenHeight()) {
         InvertDirectionY();
     }
+
+    spriteBall->SetPosition(position.x, position.y);
 }
 
 void Ball::Draw() const {

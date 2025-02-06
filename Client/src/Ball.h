@@ -18,7 +18,7 @@ public:
 
 private:
     Vector2 position;
-    Vector2 velocity;
+    Vector2 velocity = { 200, 200 };
     float radius;
 
     Sprite* spriteBall;

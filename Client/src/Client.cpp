@@ -150,20 +150,20 @@ static void CheckInput(InputManager& im)
 }
 
 int main() {
-    InputManager im;
+    //InputManager im;
 
     std::thread gameThread(Draw);
     std::thread networkThread(reseau);
-    std::thread inputThread(CheckInput, std::ref(im));
+    //std::thread inputThread(CheckInput, std::ref(im));
 
     App app;
     app.Run();  
 
-    running = false;  
+    //running = false;
 
     if (gameThread.joinable()) gameThread.join();
     if (networkThread.joinable()) networkThread.join();
-    if (inputThread.joinable()) inputThread.join();
+    //if (inputThread.joinable()) inputThread.join();
 
     return 0;
 }

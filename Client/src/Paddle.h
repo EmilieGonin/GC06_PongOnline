@@ -17,7 +17,7 @@ private:
     Vector2 position;
     float width;
     float height;
-    float speed;
+    float speed = 200;
 
     Sprite* spritePaddle;
 };
