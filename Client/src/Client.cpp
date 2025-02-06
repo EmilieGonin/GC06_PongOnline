@@ -3,12 +3,12 @@
 #include <Ws2tcpip.h>
 #include <thread>  
 #include "App.h"
-
+#include <atomic>
 #pragma comment(lib, "ws2_32.lib")
 
 #define SERVER_IP "127.0.0.1"
 #define PORT 8080
-
+std::atomic<bool> running(true);
 struct PlayerInput {
     int matchID;
     int playerID;
@@ -25,7 +25,12 @@ struct SimpleGameState {
     float ballx;
     float bally;
 };
-
+void Draw() {
+    while (running) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        //draw objects : paddels , ball , score
+    }
+}
 int reseau() {
     WSADATA wsaData;
     SOCKET clientSocket;
@@ -102,9 +107,16 @@ int reseau() {
 
 
 int main() {
-    App app;
-    app.Run();  // Lancement de l'application graphique avec le menu
-    return reseau();
+    std::thread gameThread(Draw);  
 
-    return 0;
+    App app;
+    app.Run();  
+
+    running = false;  
+
+    if (gameThread.joinable()) {
+        gameThread.join();  
+    }
+
+    return reseau();  
 }
