@@ -54,7 +54,7 @@ int main() {
     while (true) {
         PlayerInput input = { matchID, playerID, false, false };
 
-        // Gestion des touches
+        
         if (playerID == 1) {
             if (GetAsyncKeyState('Z') & 0x8000) input.moveUp = true;
             if (GetAsyncKeyState('S') & 0x8000) input.moveDown = true;
@@ -64,10 +64,10 @@ int main() {
             if (GetAsyncKeyState('D') & 0x8000) input.moveDown = true;
         }
 
-        // Envoi des inputs au serveur
+
         sendto(clientSocket, (char*)&input, sizeof(PlayerInput), 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
 
-        // Réception des données du serveur
+       
         SimpleGameState gameState;
         int serverAddrSize = sizeof(serverAddr);
         int bytesReceived = recvfrom(clientSocket, (char*)&gameState, sizeof(SimpleGameState), 0, (sockaddr*)&serverAddr, &serverAddrSize);
@@ -76,13 +76,13 @@ int main() {
             std::cerr << "[CLIENT] Erreur de réception: " << WSAGetLastError() << std::endl;
         }
         else if (bytesReceived == sizeof(SimpleGameState)) {
-            // ✅ Vérifier si l'adversaire s'est déconnecté
+            
             if (gameState.frameID == -1) {
                 std::cout << "[CLIENT] L'adversaire s'est déconnecté. Fin du match.\n";
-                break; // Quitter la boucle et terminer le client proprement
+                break; 
             }
 
-            // Affichage des données du jeu
+           
             std::cout << "[CLIENT] Frame " << gameState.frameID
                 << " | Ball (X: " << gameState.ballx << ", Y: " << gameState.bally << ")"
                 << " | Joueur 1 Y: " << gameState.player1Y
