@@ -66,6 +66,9 @@
     <ClCompile Include="src\GameScene.cpp">
       <Filter>Private\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\NetworkManager.cpp">
+      <Filter>Private\Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Menu.h" />
@@ -98,6 +101,9 @@
     </ClInclude>
     <ClInclude Include="src\GameScene.h">
       <Filter>Private\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NetworkManager.h">
+      <Filter>Private\Manager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

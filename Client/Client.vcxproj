@@ -18,6 +18,7 @@
     <ClCompile Include="src\App.cpp" />
     <ClCompile Include="src\Client.cpp" />
     <ClCompile Include="src\MenuScene.cpp" />
+    <ClCompile Include="src\NetworkManager.cpp" />
     <ClCompile Include="src\Paddle.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\SceneManager.cpp" />
@@ -31,6 +32,7 @@
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\App.h" />
     <ClInclude Include="src\MenuScene.h" />
+    <ClInclude Include="src\NetworkManager.h" />
     <ClInclude Include="src\Paddle.h" />
     <ClInclude Include="src\Scene.h" />
     <ClInclude Include="src\SceneManager.h" />

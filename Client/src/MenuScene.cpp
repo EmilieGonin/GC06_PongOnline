@@ -1,49 +1,53 @@
 ﻿#include "MenuScene.h"
 #include "GameScene.h"
 #include "SceneManager.h"
+#include "NetworkManager.h"
 #include <cstring>
 #include <string>
+#include <iostream>
 
 MenuScene::MenuScene()
 {
-    // Garde tes valeurs par défaut
     strcpy_s(username, sizeof(username), "Joueur");
     strcpy_s(serverIP, sizeof(serverIP), "127.0.0.1");
-
     editUser = false;
     editIP = false;
+
+    NetworkManager::GetInstance().Initialize();  // 🔹 Initialise le réseau au démarrage du menu
 }
 
-MenuScene::~MenuScene() {}
+MenuScene::~MenuScene() {
+    NetworkManager::GetInstance().Shutdown();  // 🔹 Ferme la connexion proprement
+}
 
-void MenuScene::Init()
-{
+void MenuScene::Init() {
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
 }
 
-void MenuScene::Update()
-{
+void MenuScene::Update() {
     HandleInput();
-
     SceneManager& sceneManager = SceneManager::GetInstance();
 
-    // Gestion des boutons
     if (GuiButton(Rectangle{ 100, 450, 200, 60 }, "Creer une partie")) {
-        // ✅ Met à jour SceneManager avant de passer à la scène suivante
         sceneManager.SetUsername(username);
         sceneManager.SetServerIP(serverIP);
         sceneManager.SetPlayerID(1);
-        sceneManager.ChangeScene(GAME);
+
+        if (NetworkManager::GetInstance().ConnectToServer(serverIP, 1, username)) {
+            sceneManager.ChangeScene(GAME);
+        }
     }
 
     if (GuiButton(Rectangle{ 100, 520, 200, 60 }, "Rejoindre une partie")) {
         sceneManager.SetUsername(username);
         sceneManager.SetServerIP(serverIP);
         sceneManager.SetPlayerID(2);
-        sceneManager.ChangeScene(GAME);
+
+        if (NetworkManager::GetInstance().ConnectToServer(serverIP, 2, username)) {
+            sceneManager.ChangeScene(GAME);
+        }
     }
 
-    // Gestion des champs de texte (affichage correct)
     if (GuiTextBox(Rectangle{ 300, 115, 200, 30 }, username, 20, editUser)) {
         editUser = !editUser;
         editIP = false;
@@ -55,19 +59,14 @@ void MenuScene::Update()
     }
 }
 
-void MenuScene::Draw()
-{
+void MenuScene::Draw() {
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    // Titre du menu
     DrawText("Menu Principal", 100, 50, 30, BLACK);
-
-    // Affichage des labels
     DrawText("Pseudo:", 100, 120, 20, BLACK);
     DrawText("IP Serveur:", 100, 170, 20, BLACK);
 
-    // Affichage des boutons
     GuiButton(Rectangle{ 100, 450, 200, 60 }, "Creer une partie");
     GuiButton(Rectangle{ 100, 520, 200, 60 }, "Rejoindre une partie");
 
@@ -76,8 +75,7 @@ void MenuScene::Draw()
 
 void MenuScene::Unload() {}
 
-void MenuScene::HandleInput()
-{
+void MenuScene::HandleInput() {
     if (editUser) {
         int key = GetCharPressed();
         int len = strlen(username);
