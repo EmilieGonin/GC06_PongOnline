@@ -10,6 +10,8 @@ Paddle::Paddle(float startX, float startY) {
     }
     spritePaddle->SetSize(20, 100);  // Taille de la raquette
     spritePaddle->SetPosition(startX, startY);
+    height = spritePaddle->GetSize().second;
+    width = spritePaddle->GetSize().first;
 }
 
 void Paddle::Update(bool moveUp, bool moveDown) {
@@ -21,7 +23,7 @@ void Paddle::Update(bool moveUp, bool moveDown) {
 
     // Limites de l'écran
     if (position.y < 0) position.y = 0;
-    if (position.y + height > GetScreenHeight()) position.y = GetScreenHeight() - height;
+    if (position.y + height > GetScreenHeight() - 28) position.y = GetScreenHeight() - 28 - height;
 
     spritePaddle->SetPosition(position.x, position.y);
 }

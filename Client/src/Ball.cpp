@@ -18,7 +18,7 @@ void Ball::Update() {
     position.y += velocity.y * GetFrameTime();
 
     // Collision avec le haut et le bas de l'écran
-    if (position.y <= 0 || position.y + radius * 2 >= GetScreenHeight()) {
+    if (position.y <= 0 || position.y + radius * 2 >= GetScreenHeight() - 28) {
         InvertDirectionY();
     }
 
