@@ -1,6 +1,16 @@
 ﻿#include "GameScene.h"
+#include <iostream>
 
 GameScene::GameScene() {
+    SceneManager& sceneManager = SceneManager::GetInstance();
+
+    std::string username = sceneManager.GetUsername();
+    std::string serverIP = sceneManager.GetServerIP();
+    int playerID = sceneManager.GetPlayerID();
+
+    std::cout << "Démarrage du jeu pour " << username << " (Player " << playerID
+        << ") sur serveur " << serverIP << std::endl;
+
     player1 = new Paddle(50, GetScreenHeight() / 2 - 50);
     player2 = new Paddle(GetScreenWidth() - 70, GetScreenHeight() / 2 - 50);
     ball = new Ball(GetScreenWidth() / 2 - 10, GetScreenHeight() / 2 - 10);

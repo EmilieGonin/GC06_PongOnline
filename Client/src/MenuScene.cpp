@@ -1,52 +1,61 @@
-#include "MenuScene.h"
+ï»¿#include "MenuScene.h"
 #include "GameScene.h"
 #include "SceneManager.h"
 #include <cstring>
 #include <string>
 
-
-MenuScene::MenuScene() 
+MenuScene::MenuScene()
 {
+    // Garde tes valeurs par dÃ©faut
     strcpy_s(username, sizeof(username), "Joueur");
     strcpy_s(serverIP, sizeof(serverIP), "127.0.0.1");
+
     editUser = false;
     editIP = false;
 }
 
 MenuScene::~MenuScene() {}
 
-void MenuScene::Init() 
+void MenuScene::Init()
 {
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
 }
 
-void MenuScene::Update() 
+void MenuScene::Update()
 {
-    HandleInput();  // Gérer les entrées utilisateur
+    HandleInput();
+
+    SceneManager& sceneManager = SceneManager::GetInstance();
 
     // Gestion des boutons
     if (GuiButton(Rectangle{ 100, 450, 200, 60 }, "Creer une partie")) {
-        SceneManager::GetInstance().ChangeScene(GAME);
+        // âœ… Met Ã  jour SceneManager avant de passer Ã  la scÃ¨ne suivante
+        sceneManager.SetUsername(username);
+        sceneManager.SetServerIP(serverIP);
+        sceneManager.SetPlayerID(1);
+        sceneManager.ChangeScene(GAME);
     }
 
     if (GuiButton(Rectangle{ 100, 520, 200, 60 }, "Rejoindre une partie")) {
-        SceneManager::GetInstance().ChangeScene(GAME);
+        sceneManager.SetUsername(username);
+        sceneManager.SetServerIP(serverIP);
+        sceneManager.SetPlayerID(2);
+        sceneManager.ChangeScene(GAME);
     }
 
-    // Gestion des champs de texte
+    // Gestion des champs de texte (affichage correct)
     if (GuiTextBox(Rectangle{ 300, 115, 200, 30 }, username, 20, editUser)) {
         editUser = !editUser;
-        editIP = false; // Désactive l'édition de l'IP
+        editIP = false;
     }
 
     if (GuiTextBox(Rectangle{ 300, 165, 200, 30 }, serverIP, 20, editIP)) {
         editIP = !editIP;
-        editUser = false; // Désactive l'édition du pseudo
+        editUser = false;
     }
 }
 
-
-void MenuScene::Draw() 
+void MenuScene::Draw()
 {
     BeginDrawing();
     ClearBackground(RAYWHITE);
@@ -56,10 +65,7 @@ void MenuScene::Draw()
 
     // Affichage des labels
     DrawText("Pseudo:", 100, 120, 20, BLACK);
-    //GuiTextBox(Rectangle{ 300, 115, 200, 30 }, username, 20, editUser);
-
     DrawText("IP Serveur:", 100, 170, 20, BLACK);
-    //GuiTextBox(Rectangle{ 300, 165, 200, 30 }, serverIP, 20, editIP);
 
     // Affichage des boutons
     GuiButton(Rectangle{ 100, 450, 200, 60 }, "Creer une partie");
@@ -68,16 +74,15 @@ void MenuScene::Draw()
     EndDrawing();
 }
 
-
 void MenuScene::Unload() {}
 
-void MenuScene::HandleInput() 
+void MenuScene::HandleInput()
 {
     if (editUser) {
         int key = GetCharPressed();
         int len = strlen(username);
         while (key > 0) {
-            if ((key >= 32) && (key <= 125) && (len < 19)) { // Autorise toutes les lettres et symboles visibles
+            if ((key >= 32) && (key <= 125) && (len < 19)) {
                 username[len] = (char)key;
                 username[len + 1] = '\0';
             }
@@ -92,7 +97,7 @@ void MenuScene::HandleInput()
         int key = GetCharPressed();
         int len = strlen(serverIP);
         while (key > 0) {
-            if (((key >= '0' && key <= '9') || key == '.') && (len < 19)) { // Autorise uniquement chiffres et points
+            if (((key >= '0' && key <= '9') || key == '.') && (len < 19)) {
                 serverIP[len] = (char)key;
                 serverIP[len + 1] = '\0';
             }
