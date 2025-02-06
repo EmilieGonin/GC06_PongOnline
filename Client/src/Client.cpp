@@ -5,6 +5,7 @@
 #include <mutex>  // Ajout du mutex
 #include <atomic>
 #include "App.h"
+#include "InputManager.h"
 #pragma comment(lib, "ws2_32.lib")
 
 #define SERVER_IP "127.0.0.1"
@@ -117,9 +118,43 @@ void reseau() {
     WSACleanup();
 }
 
+static void CheckInput(InputManager& im)
+{
+    while (running)
+    {
+        im.Update();
+
+        int playerId = 1; // temp - get current player id
+
+        if (im.ShouldQuit())
+        {
+            // quit
+        }
+
+        bool gameIsUp = true; // temp - check if game is currently playing
+
+        if (gameIsUp)
+        {
+            if (playerId == 1 ? im.IsUser1Up() : im.IsUser2Up())
+            {
+                // request up
+            }
+            else if (playerId == 1 ? im.IsUser1Down() : im.IsUser2Down())
+            {
+                // request down
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    }
+}
+
 int main() {
+    InputManager im;
+
     std::thread gameThread(Draw);
-    std::thread networkThread(reseau);  
+    std::thread networkThread(reseau);
+    std::thread inputThread(CheckInput, std::ref(im));
 
     App app;
     app.Run();  
@@ -128,6 +163,7 @@ int main() {
 
     if (gameThread.joinable()) gameThread.join();
     if (networkThread.joinable()) networkThread.join();
+    if (inputThread.joinable()) inputThread.join();
 
     return 0;
 }
