@@ -1,4 +1,6 @@
 #include "InputManager.h"
+#include <raylib.h>
+
 
 InputManager::InputManager() {
     user1Keys[0] = user1Keys[1] = false;
