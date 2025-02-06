@@ -2,6 +2,7 @@
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #include <thread>  
+#include "App.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -25,7 +26,7 @@ struct SimpleGameState {
     float bally;
 };
 
-int main() {
+int reseau() {
     WSADATA wsaData;
     SOCKET clientSocket;
     sockaddr_in serverAddr;
@@ -96,5 +97,14 @@ int main() {
 
     closesocket(clientSocket);
     WSACleanup();
+    return 0;
+}
+
+
+int main() {
+    App app;
+    app.Run();  // Lancement de l'application graphique avec le menu
+    return reseau();
+
     return 0;
 }

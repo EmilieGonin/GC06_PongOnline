@@ -1,4 +1,3 @@
-// GameScene.h
 #pragma once
 
 #include "Paddle.h"

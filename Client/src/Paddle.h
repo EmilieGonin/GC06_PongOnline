@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Sprite.h"
 #include <raylib.h>
 
 class Paddle {
@@ -17,4 +18,6 @@ private:
     float width;
     float height;
     float speed;
+
+    Sprite* spritePaddle;
 };

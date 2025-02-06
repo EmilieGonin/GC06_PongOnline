@@ -2,6 +2,7 @@
 #define RAYGUI_IMPLEMENTATION
 
 #include "App.h"
+#include "SceneManager.h"
 #include <raylib.h>
 #include <raygui.h>
 
@@ -9,21 +10,31 @@
 // Shouldn't cause any issues
 #pragma warning(disable: 4098)
 
-void App::Run()
-{
-	InitWindow(800, 600, "Pong Online");
+void App::Run() {
+    InitWindow(900, 600, "Pong Online");
+    SetTargetFPS(60);
 
-	while (!WindowShouldClose())
-	{
-		Render();
-	}
+    // Initialisation du gestionnaire de scènes
+    SceneManager& sceneManager = SceneManager::GetInstance();
 
-	CloseWindow();
+    while (!WindowShouldClose()) {
+        // Mise à jour de la scène actuelle
+        sceneManager.Update();
+
+        // Rendu de la scène actuelle
+        sceneManager.Draw();
+    }
+
+    CloseWindow();
 }
 
 void App::HandleEvents()
 {
 	// TODO: Handle player input events here
+}
+
+void App::Update(float deltaTime)
+{
 }
 
 void App::Render()

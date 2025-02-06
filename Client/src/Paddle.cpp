@@ -1,6 +1,14 @@
 #include "Paddle.h"
+#include <iostream>
 
-Paddle::Paddle(float startX, float startY) : position{ startX, startY }, width(20.0f), height(100.0f), speed(300.0f) {}
+Paddle::Paddle(float startX, float startY) {
+    spritePaddle = new Sprite();
+    if (!spritePaddle->LoadImage("paddle.png")) {  // Charge l'image de la raquette
+        std::cerr << "Erreur de chargement de paddle.png" << std::endl;
+    }
+    spritePaddle->SetSize(20, 100);  // Taille de la raquette
+    spritePaddle->SetPosition(startX, startY);
+}
 
 void Paddle::Update(bool moveUp, bool moveDown) {
     if (moveUp) position.y -= speed * GetFrameTime();
@@ -12,7 +20,7 @@ void Paddle::Update(bool moveUp, bool moveDown) {
 }
 
 void Paddle::Draw() const {
-    DrawRectangle(position.x, position.y, width, height, WHITE);
+    spritePaddle->Draw();
 }
 
 float Paddle::GetX() const {
