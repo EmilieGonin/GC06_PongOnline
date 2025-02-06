@@ -4,7 +4,6 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
-#include <unordered_map>
 #pragma comment(lib, "ws2_32.lib")
 
 
@@ -47,8 +46,6 @@ SOCKET serverSocket;
 sockaddr_in serverAddr, clientAddr;
 int clientAddrSize = sizeof(clientAddr);
 char buffer[BUFFER_SIZE];
-
-std::unordered_map<int, sockaddr_in> playerPairs; // Stocke les joueurs connectés
 
 bool InitializeServer();
 bool ReceivePlayerInput(PlayerInput& input);
@@ -271,23 +268,6 @@ void GameLoop() {
     }
 }
 
-void HandleClientConnection(sockaddr_in clientAddr, char* buffer) {
-    int playerID;
-    char username[20];
-
-    // Lire les données reçues (format: CONNECT playerID username)
-    sscanf_s(buffer, "CONNECT %d %s", &playerID, username, sizeof(username));
-
-    std::cout << "[SERVEUR] Connexion du joueur " << username << " en tant que joueur " << playerID << std::endl;
-
-    // Enregistrer le joueur dans la liste des connexions
-    playerPairs[playerID] = clientAddr;
-
-    // Envoyer confirmation au client
-    sendto(serverSocket, "OK", 2, 0, (sockaddr*)&clientAddr, sizeof(clientAddr));
-}
-
-
 void StopServer() {
     running = false;
     closesocket(serverSocket);
@@ -305,7 +285,6 @@ int main() {
         PlayerInput input;
         if (ReceivePlayerInput(input)) {
             UpdateGameState(input);
-            HandleClientConnection(clientAddr, buffer);
         }
     }
 

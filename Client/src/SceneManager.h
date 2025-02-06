@@ -3,7 +3,7 @@
 #include "Scene.h"
 #include <string>
 
-enum SceneType { MENU, GAME };
+enum SceneType { MENU, WAITING, GAME };
 
 class SceneManager {
 public:

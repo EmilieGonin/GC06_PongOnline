@@ -13,11 +13,11 @@ MenuScene::MenuScene()
     editUser = false;
     editIP = false;
 
-    NetworkManager::GetInstance().Initialize();  // 🔹 Initialise le réseau au démarrage du menu
+    NetworkManager::GetInstance().Initialize();
 }
 
 MenuScene::~MenuScene() {
-    NetworkManager::GetInstance().Shutdown();  // 🔹 Ferme la connexion proprement
+    NetworkManager::GetInstance().Shutdown(); 
 }
 
 void MenuScene::Init() {
@@ -33,9 +33,9 @@ void MenuScene::Update() {
         sceneManager.SetServerIP(serverIP);
         sceneManager.SetPlayerID(1);
 
-        if (NetworkManager::GetInstance().ConnectToServer(serverIP, 1, username)) {
-            sceneManager.ChangeScene(GAME);
-        }
+        NetworkManager::GetInstance().ConnectToServer(serverIP, 1, username);
+        sceneManager.ChangeScene(WAITING);
+        
     }
 
     if (GuiButton(Rectangle{ 100, 520, 200, 60 }, "Rejoindre une partie")) {

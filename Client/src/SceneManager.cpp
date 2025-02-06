@@ -2,6 +2,7 @@
 
 #include "MenuScene.h"
 #include "GameScene.h"
+#include "WaitingScene.h"
 
 SceneManager::SceneManager() {
     currentScene = new MenuScene();
@@ -21,16 +22,26 @@ void SceneManager::ChangeScene(SceneType type) {
     if (currentScene) {
         currentScene->Unload();
         delete currentScene;
+        currentScene = nullptr;
     }
 
-    if (type == MENU) {
+    switch (type) {
+    case MENU:
         currentScene = new MenuScene();
-    }
-    else if (type == GAME) {
+        break;
+    case WAITING:
+        currentScene = new WaitingScene();
+        break;
+    case GAME:
         currentScene = new GameScene();
+        break;
     }
-    currentScene->Init();
+
+    if (currentScene) {
+        currentScene->Init();
+    }
 }
+
 
 void SceneManager::Update() {
     if (currentScene) {

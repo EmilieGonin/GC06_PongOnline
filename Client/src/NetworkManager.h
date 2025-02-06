@@ -13,6 +13,8 @@ public:
     bool SendData(const std::string& data);
     std::string ReceiveData();
 
+    bool IsGameReady();
+
 private:
     NetworkManager();
     ~NetworkManager();
@@ -22,5 +24,4 @@ private:
     void* clientSocket;  // On utilise `void*` pour éviter Winsock ici
     void* serverAddr;
 
-    bool IsGameReady();
 };

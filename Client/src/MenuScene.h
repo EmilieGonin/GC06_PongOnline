@@ -20,6 +20,5 @@ public:
     void Draw() override;
     void Unload() override;
     void HandleInput();
-    bool IsGameReady();
 };
 
