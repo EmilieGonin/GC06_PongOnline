@@ -26,13 +26,6 @@ struct SimpleGameState {
     float bally;
 };
 
-int main() {
-    App app;
-    app.Run();  // Lancement de l'application graphique avec le menu
-
-    return 0;
-}
-
 int reseau() {
     WSADATA wsaData;
     SOCKET clientSocket;
@@ -104,5 +97,14 @@ int reseau() {
 
     closesocket(clientSocket);
     WSACleanup();
+    return 0;
+}
+
+
+int main() {
+    App app;
+    app.Run();  // Lancement de l'application graphique avec le menu
+    return reseau();
+
     return 0;
 }
