@@ -1,18 +1,19 @@
-﻿#include <iostream>
+﻿#include <iostream> 
 #include <winsock2.h>
 #include <map>
 #include <thread>
 #include <chrono>
 #include <atomic>
-#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "ws2_32.lib") // Liaison avec la bibliothèque Winsock pour les sockets sous Windows
 
+#define PORT 8080  // Port du serveur
+#define BUFFER_SIZE 8000  // Taille du buffer pour la réception des données
+#define SCREEN_HEIGHT 600  // Hauteur de l'écran
+#define SCREEN_WIDTH 800  // Largeur de l'écran
+#define PADDLE_SPEED 5.0f  // Vitesse des raquettes
+#define BALL_SPEED 4.0f  // Vitesse de la balle
 
-#define PORT 8080
-#define BUFFER_SIZE 8000
-#define SCREEN_HEIGHT 600
-#define SCREEN_WIDTH 800
-#define PADDLE_SPEED 5.0f
-#define BALL_SPEED 4.0f
+// Structure représentant l'état du jeu
 struct GameState {
     float ballX, ballY;
     float ballVelX, ballVelY;
@@ -20,6 +21,7 @@ struct GameState {
     int score1, score2;
 };
 
+// Structure contenant l'entrée des joueurs
 struct PlayerInput {
     int matchID;
     int playerID;
@@ -27,6 +29,7 @@ struct PlayerInput {
     bool moveDown;
 };
 
+// Structure simplifiée pour envoyer l'état du jeu aux clients
 struct SimpleGameState {
     int frameID;
     float player1Y;
@@ -37,21 +40,25 @@ struct SimpleGameState {
     float bally;
 };
 
+// Gestion des matchs et des connexions
 std::map<int, std::pair<sockaddr_in, sockaddr_in>> playerPairs;
 std::map<int, GameState> games;
 std::map<int, int> frameCounters;
 std::map<int, std::pair<std::chrono::steady_clock::time_point, std::chrono::steady_clock::time_point>> lastActivity;
-std::atomic<bool> running(true);
+
+std::atomic<bool> running(true); // Variable pour stopper le serveur proprement
 SOCKET serverSocket;
 sockaddr_in serverAddr, clientAddr;
 int clientAddrSize = sizeof(clientAddr);
 char buffer[BUFFER_SIZE];
 
+// Prototypes
 bool InitializeServer();
 bool ReceivePlayerInput(PlayerInput& input);
 void UpdateGameState(const PlayerInput& input);
 void SendTestMessage(int matchID);
 
+// Initialisation du serveur
 bool InitializeServer() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -77,10 +84,11 @@ bool InitializeServer() {
         return false;
     }
 
-    std::cout << " Serveur Pong demarre sur le port " << PORT << "...\n";
+    std::cout << " Serveur Pong démarré sur le port " << PORT << "...\n";
     return true;
 }
 
+// Réception des entrées des joueurs
 bool ReceivePlayerInput(PlayerInput& input) {
     char buffer[BUFFER_SIZE] = {};
     int bytesReceived = recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (sockaddr*)&clientAddr, &clientAddrSize);
@@ -88,7 +96,7 @@ bool ReceivePlayerInput(PlayerInput& input) {
 
     memcpy(&input, buffer, sizeof(PlayerInput));
 
-   
+    // Attribution des joueurs au match
     if (playerPairs[input.matchID].first.sin_port == 0) {
         playerPairs[input.matchID].first = clientAddr;
         lastActivity[input.matchID].first = std::chrono::steady_clock::now();
@@ -98,7 +106,6 @@ bool ReceivePlayerInput(PlayerInput& input) {
         lastActivity[input.matchID].second = std::chrono::steady_clock::now();
     }
     else {
-       
         if (clientAddr.sin_port == playerPairs[input.matchID].first.sin_port) {
             lastActivity[input.matchID].first = std::chrono::steady_clock::now();
         }
@@ -107,19 +114,21 @@ bool ReceivePlayerInput(PlayerInput& input) {
         }
     }
 
+    std::cout << "[SERVEUR] Entrée reçue - Match: " << input.matchID
+        << ", Joueur: " << input.playerID
+        << ", MoveUp: " << input.moveUp
+        << ", MoveDown: " << input.moveDown << std::endl;
+
     return true;
 }
 
-
-
-
+// Mise à jour de l'état du jeu
 void UpdateGameState(const PlayerInput& input) {
     if (games.find(input.matchID) == games.end()) {
         games[input.matchID] = { 400, 300, BALL_SPEED, BALL_SPEED, 250, 250, 0, 0 };
     }
 
     GameState& gameState = games[input.matchID];
-
 
     if (input.playerID == 1) {
         if (input.moveUp && gameState.player1Y > 0) gameState.player1Y -= PADDLE_SPEED;
@@ -129,14 +138,19 @@ void UpdateGameState(const PlayerInput& input) {
         if (input.moveUp && gameState.player2Y > 0) gameState.player2Y -= PADDLE_SPEED;
         if (input.moveDown && gameState.player2Y < SCREEN_HEIGHT - 100) gameState.player2Y += PADDLE_SPEED;
     }
-}
 
+    std::cout << "[SERVEUR] Mise à jour du match " << input.matchID
+        << " | Joueur 1 Y: " << gameState.player1Y
+        << " | Joueur 2 Y: " << gameState.player2Y << std::endl;
+}
+//verifier si les deux joueur sont co ou pas client 1 en attante 
 bool IsMatchReady(int matchID) {
     return playerPairs[matchID].first.sin_port != 0 &&
         playerPairs[matchID].second.sin_port != 0 &&
         lastActivity[matchID].first.time_since_epoch().count() != 0 &&
         lastActivity[matchID].second.time_since_epoch().count() != 0;
 }
+// Envoi des données aux clients
 void SendTestMessage(int matchID) {
     if (!IsMatchReady(matchID)) {
         std::cout << "[SERVEUR] En attente d'un deuxième joueur pour le match " << matchID << "...\n";
@@ -144,24 +158,11 @@ void SendTestMessage(int matchID) {
     }
 
     GameState& gameState = games[matchID];
-    SimpleGameState simpleState;
-    simpleState.frameID = ++frameCounters[matchID];
-    simpleState.player1Y = gameState.player1Y;
-    simpleState.player2Y = gameState.player2Y;
-    simpleState.score1 = gameState.score1;
-    simpleState.score2 = gameState.score2;
-    simpleState.ballx = gameState.ballX;
-    simpleState.bally = gameState.ballY;
+    SimpleGameState simpleState = { ++frameCounters[matchID], gameState.player1Y, gameState.player2Y,
+                                    gameState.score1, gameState.score2, gameState.ballX, gameState.ballY };
 
-    if (playerPairs[matchID].first.sin_port != 0) {
-        sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0,
-            (sockaddr*)&playerPairs[matchID].first, clientAddrSize);
-    }
-
-    if (playerPairs[matchID].second.sin_port != 0) {
-        sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0,
-            (sockaddr*)&playerPairs[matchID].second, clientAddrSize);
-    }
+    sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0, (sockaddr*)&playerPairs[matchID].first, clientAddrSize);
+    sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0, (sockaddr*)&playerPairs[matchID].second, clientAddrSize);
 
     std::cout << "[SERVEUR] Match " << matchID << " - Frame " << simpleState.frameID
         << " | Ball (X: " << simpleState.ballx << ", Y: " << simpleState.bally << ")"
@@ -171,93 +172,25 @@ void SendTestMessage(int matchID) {
         << std::endl;
 }
 
-
-
+// Boucle principale du jeu
 void GameLoop() {
     using namespace std::chrono;
-    const int TIMEOUT_SECONDS = 5;
-    const milliseconds FRAME_TIME(1000 / 60);  
+    const milliseconds FRAME_TIME(1000 / 60);
 
     while (running) {
-        auto now = steady_clock::now();
-
         for (auto it = games.begin(); it != games.end();) {
             int matchID = it->first;
             auto& gameState = it->second;
 
-            
             if (!IsMatchReady(matchID)) {
                 ++it;
-                continue;
-            }
-
-           
-            bool player1Active = now - lastActivity[matchID].first < seconds(TIMEOUT_SECONDS);
-            bool player2Active = now - lastActivity[matchID].second < seconds(TIMEOUT_SECONDS);
-
-            if (!player1Active || !player2Active) {
-                std::cout << "[SERVEUR] Match " << matchID << " terminé - Un joueur s'est déconnecté.\n";
-
-               
-                SimpleGameState disconnectMessage = {};
-                disconnectMessage.frameID = -1;  
-                if (player1Active) {
-                    sendto(serverSocket, (char*)&disconnectMessage, sizeof(SimpleGameState), 0,
-                        (sockaddr*)&playerPairs[matchID].first, clientAddrSize);
-                }
-                if (player2Active) {
-                    sendto(serverSocket, (char*)&disconnectMessage, sizeof(SimpleGameState), 0,
-                        (sockaddr*)&playerPairs[matchID].second, clientAddrSize);
-                }
-
-                playerPairs.erase(matchID);
-                lastActivity.erase(matchID);
-                it = games.erase(it);
                 continue;
             }
 
             gameState.ballX += gameState.ballVelX;
             gameState.ballY += gameState.ballVelY;
 
-            
-            if (gameState.ballY <= 0 || gameState.ballY >= SCREEN_HEIGHT) {
-                gameState.ballVelY = -gameState.ballVelY;
-            }
-
-            
-            if (gameState.ballX <= 50 &&
-                gameState.ballY >= gameState.player1Y &&
-                gameState.ballY <= gameState.player1Y + 100) {
-                gameState.ballVelX = -gameState.ballVelX;
-            }
-
-         
-            if (gameState.ballX >= SCREEN_WIDTH - 50 &&
-                gameState.ballY >= gameState.player2Y &&
-                gameState.ballY <= gameState.player2Y + 100) {
-                gameState.ballVelX = -gameState.ballVelX;
-            }
-
-          
-            if (gameState.ballX < 0) {
-                gameState.score2++;
-                gameState.ballX = SCREEN_WIDTH / 2;
-                gameState.ballY = SCREEN_HEIGHT / 2;
-                gameState.ballVelX = BALL_SPEED;
-                gameState.ballVelY = BALL_SPEED;
-            }
-
-            if (gameState.ballX > SCREEN_WIDTH) {
-                gameState.score1++;
-                gameState.ballX = SCREEN_WIDTH / 2;
-                gameState.ballY = SCREEN_HEIGHT / 2;
-                gameState.ballVelX = -BALL_SPEED;
-                gameState.ballVelY = BALL_SPEED;
-            }
-
-           
             SendTestMessage(matchID);
-
             ++it;
         }
 
@@ -265,35 +198,23 @@ void GameLoop() {
     }
 }
 
-
-
-
-
+// Fonction pour arrêter proprement le serveur
 void StopServer() {
     running = false;
     closesocket(serverSocket);
     WSACleanup();
 }
 
+// Fonction principale
 int main() {
-    if (!InitializeServer()) {
-        return EXIT_FAILURE;
-    }
-
+    if (!InitializeServer()) return EXIT_FAILURE;
     std::thread gameThread(GameLoop);
 
     while (running) {
         PlayerInput input;
-        if (ReceivePlayerInput(input)) {
-            UpdateGameState(input);
-        }
+        if (ReceivePlayerInput(input)) UpdateGameState(input);
     }
 
-
-    if (gameThread.joinable()) {
-        gameThread.join();
-    }
-
+    if (gameThread.joinable()) gameThread.join();
     return 0;
 }
-
