@@ -153,7 +153,7 @@ int main() {
     //InputManager im;
 
     std::thread gameThread(Draw);
-    std::thread networkThread(reseau);
+    //std::thread networkThread(reseau);
     //std::thread inputThread(CheckInput, std::ref(im));
 
     App app;
@@ -162,7 +162,7 @@ int main() {
     //running = false;
 
     if (gameThread.joinable()) gameThread.join();
-    if (networkThread.joinable()) networkThread.join();
+    //if (networkThread.joinable()) networkThread.join();
     //if (inputThread.joinable()) inputThread.join();
 
     return 0;

@@ -111,5 +111,9 @@
     <ClInclude Include="src\WaitingScene.h">
       <Filter>Private\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="src\GameState.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
