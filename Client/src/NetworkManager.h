@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "GameState.h"
 class NetworkManager {
 public:
     static NetworkManager& GetInstance();
@@ -10,10 +11,8 @@ public:
     void Shutdown();
 
     bool ConnectToServer(const std::string& serverIP, int playerID, const std::string& username);
-    bool SendData(const std::string& data);
-    std::string ReceiveData();
-
-    bool IsGameReady();
+    void SendData(int matchID, int playerID);
+    void ReceiveData();
 
 private:
     NetworkManager();
@@ -23,5 +22,5 @@ private:
 
     void* clientSocket;  // On utilise `void*` pour éviter Winsock ici
     void* serverAddr;
-
+    SimpleGameState gameState;
 };

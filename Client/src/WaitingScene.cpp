@@ -10,9 +10,9 @@ void WaitingScene::Update() {
     SceneManager& sceneManager = SceneManager::GetInstance();
 
     // Vérifier si 2 joueurs sont prêts
-    if (NetworkManager::GetInstance().IsGameReady()) {
+    /*if (NetworkManager::GetInstance().IsGameReady()) {
         sceneManager.ChangeScene(GAME, "");
-    }
+    }*/
 }
 
 void WaitingScene::Draw() {

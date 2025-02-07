@@ -2,22 +2,35 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iostream>
+#include <mutex>
 
 #pragma comment(lib, "ws2_32.lib")
 
+#define SERVER_IP "127.0.0.1"
+#define PORT 8080
+std::atomic<bool> running(true);
+std::mutex gameMutex;
+
 NetworkManager::NetworkManager() {
     WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "[NetworkManager] Erreur WSAStartup" << std::endl;
-    }
+    SOCKET clientSocket;
+    sockaddr_in serverAddr;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+    clientSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
+    inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
 
-    // Création du socket UDP
-    clientSocket = (void*)socket(AF_INET, SOCK_DGRAM, 0);
-    if ((SOCKET)clientSocket == INVALID_SOCKET) {
-        std::cerr << "[NetworkManager] Erreur de création du socket" << std::endl;
-    }
+    sockaddr_in clientAddr;
+    clientAddr.sin_family = AF_INET;
+    clientAddr.sin_addr.s_addr = INADDR_ANY;
+    clientAddr.sin_port = htons(0);
 
-    serverAddr = new sockaddr_in();
+    if (bind(clientSocket, (sockaddr*)&clientAddr, sizeof(clientAddr)) == SOCKET_ERROR) {
+        std::cerr << "[CLIENT] Erreur de bind sur un port local\n";
+        running = false;
+        return;
+    }
 }
 
 NetworkManager::~NetworkManager() {
@@ -76,43 +89,43 @@ bool NetworkManager::ConnectToServer(const std::string& serverIP, int playerID, 
 }
 
 
-bool NetworkManager::SendData(const std::string& data) {
-    sockaddr_in* addr = (sockaddr_in*)serverAddr;
-    if (sendto((SOCKET)clientSocket, data.c_str(), data.length(), 0, (sockaddr*)addr, sizeof(sockaddr_in)) == SOCKET_ERROR) {
-        std::cerr << "[NetworkManager] Erreur d'envoi des données" << std::endl;
-        return false;
+void NetworkManager::SendData(int matchID, int playerID) {
+    PlayerInput input = { matchID, playerID, false, false };
+
+    if (playerID == 1) {
+        if (GetAsyncKeyState('Z') & 0x8000) input.moveUp = true;
+        if (GetAsyncKeyState('S') & 0x8000) input.moveDown = true;
     }
-    return true;
+    else if (playerID == 2) {
+        if (GetAsyncKeyState('E') & 0x8000) input.moveUp = true;
+        if (GetAsyncKeyState('D') & 0x8000) input.moveDown = true;
+    }
+
+
+    sendto((SOCKET)clientSocket, (char*)&input, sizeof(PlayerInput), 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
 }
 
-std::string NetworkManager::ReceiveData() {
-    char buffer[256];
-    sockaddr_in* addr = (sockaddr_in*)serverAddr;
-    int addrSize = sizeof(sockaddr_in);
-    int bytesReceived = recvfrom((SOCKET)clientSocket, buffer, sizeof(buffer), 0, (sockaddr*)addr, &addrSize);
+bool NetworkManager::ReceiveData() {
+    SimpleGameState newGameState;
+    int serverAddrSize = sizeof(serverAddr);
+    int bytesReceived = recvfrom((SOCKET)clientSocket, (char*)&newGameState, sizeof(SimpleGameState), 0, (sockaddr*)&serverAddr, &serverAddrSize);
 
-    if (bytesReceived > 0) {
-        buffer[bytesReceived] = '\0';
-        return std::string(buffer);
+    if (bytesReceived == SOCKET_ERROR) {
+        std::cerr << "[CLIENT] Erreur de réception: " << WSAGetLastError() << std::endl;
+        return false; // Échec de réception
     }
-    return "";
-}
+    else if (bytesReceived == sizeof(SimpleGameState)) {
+        if (newGameState.frameID == -1) {
+            std::cout << "[CLIENT] L'adversaire s'est déconnecté. Fin du match.\n";
+            running = false;
+            return false; // Indique que la connexion a été perdue
+        }
 
-bool NetworkManager::IsGameReady() {
-    std::cout << "[NetworkManager] Vérification du nombre de joueurs connectés..." << std::endl;
-
-    // ?? Envoyer une requête pour savoir combien de joueurs sont connectés
-    std::string request = "PLAYERS";
-    if (!SendData(request)) return false;
-
-    // ?? Recevoir la réponse du serveur
-    std::string response = ReceiveData();
-
-    if (response == "2") {
-        std::cout << "[NetworkManager] 2 joueurs connectés, la partie peut commencer !" << std::endl;
-        return true;
+        {
+            std::lock_guard<std::mutex> lock(gameMutex);
+            gameState = newGameState;
+        }
+        return true; // Réception réussie
     }
-
-    std::cout << "[NetworkManager] En attente d'un autre joueur..." << std::endl;
-    return false;
+    return false; // Retourne false si la réception n'est pas complète
 }
