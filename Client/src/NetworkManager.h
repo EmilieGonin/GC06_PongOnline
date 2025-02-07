@@ -12,7 +12,7 @@ public:
 
     bool ConnectToServer(const std::string& serverIP, int playerID, const std::string& username);
     void SendData(int matchID, int playerID);
-    void ReceiveData();
+    bool ReceiveData();
 
 private:
     NetworkManager();

@@ -12,9 +12,6 @@
 #define PORT 8080
 
 
-std::atomic<bool> running(true);
-std::mutex gameMutex;  
-
 struct PlayerInput {
     int matchID;
     int playerID;
@@ -32,22 +29,25 @@ struct SimpleGameState {
 } gameState;  
 
 void Draw() {
+    /*
     while (running) {
         {
             std::lock_guard<std::mutex> lock(gameMutex);  
             
-           /* std::cout << "[DRAW] Ball (X: " << gameState.ballx << ", Y: " << gameState.bally << ")"
+            std::cout << "[DRAW] Ball (X: " << gameState.ballx << ", Y: " << gameState.bally << ")"
                 << " | J1 Y: " << gameState.player1Y
                 << " | J2 Y: " << gameState.player2Y
                 << " | Score: " << gameState.score1 << " - " << gameState.score2
-                << std::endl;*/
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));  
+                << std::endl;
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    }
+    */
 }
 
 void reseau() {
+    /*
     WSADATA wsaData;
     SOCKET clientSocket;
     sockaddr_in serverAddr;
@@ -147,6 +147,7 @@ static void CheckInput(InputManager& im)
 
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
+    */
 }
 
 int main() {
