@@ -21,6 +21,6 @@ private:
     NetworkManager& operator=(const NetworkManager&) = delete;
 
     void* clientSocket;  // On utilise `void*` pour éviter Winsock ici
-    void* serverAddr;
+    //sockaddr_in serverAddr;
     SimpleGameState gameState;
 };

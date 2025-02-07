@@ -137,6 +137,7 @@ bool IsMatchReady(int matchID) {
         lastActivity[matchID].first.time_since_epoch().count() != 0 &&
         lastActivity[matchID].second.time_since_epoch().count() != 0;
 }
+
 void SendTestMessage(int matchID) {
     if (!IsMatchReady(matchID)) {
         std::cout << "[SERVEUR] En attente d'un deuxième joueur pour le match " << matchID << "...\n";
@@ -153,24 +154,32 @@ void SendTestMessage(int matchID) {
     simpleState.ballx = gameState.ballX;
     simpleState.bally = gameState.ballY;
 
-    if (playerPairs[matchID].first.sin_port != 0) {
-        sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0,
-            (sockaddr*)&playerPairs[matchID].first, clientAddrSize);
-    }
+    char ack[3] = "OK";
+    sockaddr_in sender;
+    int senderSize = sizeof(sender);
 
-    if (playerPairs[matchID].second.sin_port != 0) {
-        sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0,
-            (sockaddr*)&playerPairs[matchID].second, clientAddrSize);
-    }
+    auto sendWithAck = [&](sockaddr_in& clientAddr) {
+        if (clientAddr.sin_port != 0) {
+            sendto(serverSocket, (char*)&simpleState, sizeof(SimpleGameState), 0,
+                (sockaddr*)&clientAddr, clientAddrSize);
 
-    std::cout << "[SERVEUR] Match " << matchID << " - Frame " << simpleState.frameID
-        << " | Ball (X: " << simpleState.ballx << ", Y: " << simpleState.bally << ")"
-        << " | Joueur 1 Y: " << simpleState.player1Y
-        << " | Joueur 2 Y: " << simpleState.player2Y
-        << " | Score: " << simpleState.score1 << " - " << simpleState.score2
-        << std::endl;
+            // Attendre un accusé de réception
+            int retries = 3;
+            while (retries--) {
+                int bytesReceived = recvfrom(serverSocket, ack, sizeof(ack), 0,
+                    (sockaddr*)&sender, &senderSize);
+                if (bytesReceived > 0 && strcmp(ack, "OK") == 0) {
+                    return;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
+            std::cerr << "[SERVEUR] Aucune réponse du client, tentative suivante..." << std::endl;
+        }
+        };
+
+    sendWithAck(playerPairs[matchID].first);
+    sendWithAck(playerPairs[matchID].second);
 }
-
 
 
 void GameLoop() {

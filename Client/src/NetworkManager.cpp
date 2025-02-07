@@ -10,32 +10,37 @@
 #define PORT 8080
 std::atomic<bool> running(true);
 std::mutex gameMutex;
+sockaddr_in serverAddr;
 
 NetworkManager::NetworkManager() {
     WSADATA wsaData;
-    SOCKET clientSocket;
-    sockaddr_in serverAddr;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
-    clientSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cerr << "[NetworkManager] Erreur lors de l'initialisation de Winsock" << std::endl;
+        return;
+    }
+
+    clientSocket = (void*)socket(AF_INET, SOCK_DGRAM, 0);
+    if ((SOCKET)clientSocket == INVALID_SOCKET) {
+        std::cerr << "[NetworkManager] Erreur de création du socket\n";
+        return;  
+    }
+
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT);
-    inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
+    serverAddr.sin_port = htons(8080); 
+    inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
     sockaddr_in clientAddr;
     clientAddr.sin_family = AF_INET;
     clientAddr.sin_addr.s_addr = INADDR_ANY;
     clientAddr.sin_port = htons(0);
 
-    if (bind(clientSocket, (sockaddr*)&clientAddr, sizeof(clientAddr)) == SOCKET_ERROR) {
-        std::cerr << "[CLIENT] Erreur de bind sur un port local\n";
-        running = false;
-        return;
+    if (bind((SOCKET)clientSocket, (sockaddr*)&clientAddr, sizeof(clientAddr)) == SOCKET_ERROR) {
+        std::cerr << "[NetworkManager] Erreur de bind sur un port local\n";
     }
 }
 
 NetworkManager::~NetworkManager() {
     Shutdown();
-    delete (sockaddr_in*)serverAddr;
 }
 
 NetworkManager& NetworkManager::GetInstance() {
@@ -48,14 +53,18 @@ bool NetworkManager::Initialize() {
 }
 
 void NetworkManager::Shutdown() {
-    closesocket((SOCKET)clientSocket);
+    if (clientSocket) {
+        closesocket((SOCKET)clientSocket);
+        clientSocket = nullptr;
+    }
     WSACleanup();
 }
+
 
 bool NetworkManager::ConnectToServer(const std::string& serverIP, int playerID, const std::string& username) {
     std::cout << "[NetworkManager] Tentative de connexion à " << serverIP << " en tant que joueur " << playerID << std::endl;
 
-    sockaddr_in* addr = (sockaddr_in*)serverAddr;
+    sockaddr_in* addr = &serverAddr;
     addr->sin_family = AF_INET;
     addr->sin_port = htons(8080);
     inet_pton(AF_INET, serverIP.c_str(), &addr->sin_addr);
@@ -112,26 +121,30 @@ bool NetworkManager::SendData(int matchID, int playerID) {
 
 
 bool NetworkManager::ReceiveData() {
+    if ((SOCKET)clientSocket == INVALID_SOCKET) {
+        std::cerr << "[NetworkManager] Erreur: clientSocket invalide, Winsock peut ne pas être initialisé" << std::endl;
+        return false;
+    }
+
     SimpleGameState newGameState;
-    int serverAddrSize = sizeof(serverAddr);
-    int bytesReceived = recvfrom((SOCKET)clientSocket, (char*)&newGameState, sizeof(SimpleGameState), 0, (sockaddr*)&serverAddr, &serverAddrSize);
+    sockaddr_in senderAddr;
+    int senderAddrSize = sizeof(senderAddr);
+
+    int bytesReceived = recvfrom((SOCKET)clientSocket, (char*)&newGameState, sizeof(SimpleGameState), 0,
+        (sockaddr*)&senderAddr, &senderAddrSize);
 
     if (bytesReceived == SOCKET_ERROR) {
         std::cerr << "[CLIENT] Erreur de réception: " << WSAGetLastError() << std::endl;
-        return false; // Échec de réception
+        return false;
     }
-    else if (bytesReceived == sizeof(SimpleGameState)) {
-        if (newGameState.frameID == -1) {
-            std::cout << "[CLIENT] L'adversaire s'est déconnecté. Fin du match.\n";
-            running = false;
-            return false; // Indique que la connexion a été perdue
-        }
 
-        {
-            std::lock_guard<std::mutex> lock(gameMutex);
-            gameState = newGameState;
-        }
-        return true; // Réception réussie
+    if (bytesReceived == sizeof(SimpleGameState)) {
+        char ack[3] = "OK";
+        sendto((SOCKET)clientSocket, ack, sizeof(ack), 0, (sockaddr*)&senderAddr, senderAddrSize);
+
+        std::lock_guard<std::mutex> lock(gameMutex);
+        gameState = newGameState;
+        return true;
     }
-    return false; // Retourne false si la réception n'est pas complète
+    return false;
 }
