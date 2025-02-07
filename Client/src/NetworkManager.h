@@ -11,7 +11,7 @@ public:
     void Shutdown();
 
     bool ConnectToServer(const std::string& serverIP, int playerID, const std::string& username);
-    void SendData(int matchID, int playerID);
+    bool SendData(int matchID, int playerID);
     bool ReceiveData();
 
 private:

@@ -89,7 +89,7 @@ bool NetworkManager::ConnectToServer(const std::string& serverIP, int playerID, 
 }
 
 
-void NetworkManager::SendData(int matchID, int playerID) {
+bool NetworkManager::SendData(int matchID, int playerID) {
     PlayerInput input = { matchID, playerID, false, false };
 
     if (playerID == 1) {
@@ -101,9 +101,15 @@ void NetworkManager::SendData(int matchID, int playerID) {
         if (GetAsyncKeyState('D') & 0x8000) input.moveDown = true;
     }
 
+    int bytesSent = sendto((SOCKET)clientSocket, (char*)&input, sizeof(PlayerInput), 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
 
-    sendto((SOCKET)clientSocket, (char*)&input, sizeof(PlayerInput), 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
+    if (bytesSent == SOCKET_ERROR) {
+        std::cerr << "[CLIENT] Erreur d'envoi: " << WSAGetLastError() << std::endl;
+        return false; // Échec d'envoi
+    }
+    return true; // Envoi réussi
 }
+
 
 bool NetworkManager::ReceiveData() {
     SimpleGameState newGameState;
