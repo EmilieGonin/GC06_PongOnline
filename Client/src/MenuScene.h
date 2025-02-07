@@ -21,4 +21,3 @@ public:
     void Unload() override;
     void HandleInput();
 };
-
